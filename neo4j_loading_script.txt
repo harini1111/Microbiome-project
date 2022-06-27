@@ -1,0 +1,36 @@
+MATCH (n) DETACH DELETE n;
+
+
+# 1. Taxonomic profile
+# Create Species and load hierarchy (Genus, Species, etc. - microbiome taxonomy)
+LOAD CSV WITH HEADERS FROM 'file:///MSM5LLDM_taxonomic_profile.biom.txt' AS line FIELDTERMINATOR '\t' 
+WITH [n IN split(line.OTU_ID,'|')|trim(n)] as t
+WHERE size(t)>1
+FOREACH (i in range(0, size(t)-2)
+   | MERGE (p1:MicrobiomeEntity {Name: t[i]}) MERGE (p2:MicrobiomeEntity {Name: t[i+1]}) MERGE (p1)-[:LINEAGE]->(p2))
+   
+   
+# Load Abunduncies from the same file assuming that the sample is from Healthy group (Sample group: Healthy - - Microbiome entity)
+LOAD CSV WITH HEADERS FROM 'file:///MSM5LLDM_taxonomic_profile.biom.txt' AS line FIELDTERMINATOR '\t' 
+WITH line.Metaphlan2_Analysis as amount, [n IN split(line.OTU_ID,'|')|trim(n)] as t
+MATCH (s:MicrobiomeEntity {Name: t[size(t)-1]})
+MERGE (d:State {Name:'Healthy samples'})
+MERGE (d)<-[:PRESENT {Abundance:amount, Type:"Metaphlan2_Analysis"}]-(s)
+
+
+# 2. Pathway Abundance (Hyperedge: Sample group: Healthy, Microbiome entity (Genus, Species), Pathway)
+LOAD CSV WITH HEADERS FROM 'file:///MSM5LLDE_pathabundance_relab.biom.txt' AS line FIELDTERMINATOR '\t' 
+WITH [n IN split(line.OTU_ID,'|')|trim(n)] as ft,line.Abundance as amount
+MATCH (s:MicrobiomeEntity {Name: ft[size(ft)-1]})
+MATCH (d:State {Name:'Healthy samples'})
+MERGE (p:Pathway {Name: ft[0]})
+MERGE (ps:PathwayState {Name: ft[0]+'_Healthy'})
+MERGE (ps)<-[:PRESENT_IN {Abundance:amount, Type:"PathAbundance"}]->(s)
+MERGE (ps)<-[:USED_IN]-(p)
+MERGE (ps)<-[:USED_IN]-(d)
+
+# Needed: 1) Load pathway hierarchy from MetaCyc database (?), e.g. https://biocyc.org/META/NEW-IMAGE?type=PATHWAY&object=PWY-6387
+
+LOAD CSV WITH HEADERS FROM 'file:///test.txt' AS line FIELDTERMINATOR '\t' 
+WITH line.Metaphlan2_Analysis as amount, [n IN split(line.OTU_ID,'|')|trim(n)] as t
+FOREACH (x in t | MERGE (:MicrobiomeEntity {Name: x}))
