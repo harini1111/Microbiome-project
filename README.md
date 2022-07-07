@@ -9,3 +9,6 @@
 3. Biom files are downloaded into the folder "data"
 4. Biom files are convreted into tsv format and slightly modified to make them ready for neo4j loading.
 5. Processed tsv files are in the folder "import_data"
+
+## Data cleaning
+1. Run python script "Data_cleaning.py". (07Jul2022: File in progress)
