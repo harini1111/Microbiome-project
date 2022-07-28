@@ -1,92 +1,67 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
-import pandas as pd
-import numpy as np
+# Importing necessary libraries:
 import os
-os.getcwd()
-os.chdir('C:/Users/Harini01.R/Desktop/Git/Microbiome-project/import_data')
+import pandas as pd
+import re
+import numpy as np
 
+# Loading all files from the Group:
+folder = r'C:/Users/Harini01.R/Desktop/Git/Microbiome-project/import_data/GroupA'
+files = os.listdir(folder)
+pwyfiles = []
+ecsfiles = []
+genfiles = []
+taxfiles = []
 
-# In[2]:
+for file in files:
+    if re.search(r"path", file):
+        pwyfiles.append(f"{folder}/{file}")
+    elif re.search(r"ecs", file):
+        ecsfiles.append(f"{folder}/{file}")
+    elif re.search(r"gene", file):
+        genfiles.append(f"{folder}/{file}")
+    elif re.search(r"taxon", file):
+        taxfiles.append(f"{folder}/{file}")
+        
+# Pre-processing the individual files:
+visitname = []
+for file in pwyfiles:
+    visitname.append(file[70:78])
+    
+def pwypreprocess_1(df):
+    otu = df.OTU_ID
+    otup = otu.str.split(':')
+    df["PWY"] = ""
+    for i in range (0,len(otup)):
+        df.PWY[i] = otup[i][0]
+    otug = otu.str.split('|')
+    df["Genus"] = ""
+    for j in range(0,len(otug)):
+        if(len(otug[j])<=1):
+            df.Genus[j] = 0
+        else:
+            df.Genus[j] = otug[j][1]
+    return df
 
+def pwypreprocess_2(df):
+    df = df.drop(df[df['Genus'] == 0].index)
+    df = df.drop(df[df['Genus'] == 'unclassified'].index)
+    df = df.drop(df[df['Abundance'] == 0].index)
+    df = df.drop('OTU_ID', axis = 1)
+    if 'taxonomy' in df.columns:
+        df = df.drop('taxonomy', axis = 1)
+    return df
 
-df1 = pd.read_table("MSM5LLDA_taxonomic_profile.biom.tsv")
+for i in range(0, len(pwyfiles)):
+    df = pd.read_table(pwyfiles[i])
+    df_1 = pwypreprocess_1(df)
+    df_2 = pwypreprocess_2(df_1)
+    df_2["Visit_name"] = visitname[i]
+    #print(df_2)
+    pwyfiles[i] = df_2
 
-
-# In[3]:
-
-
-def cleaning(df):
-    df["helper"] = " "
-    OTUIDs = df.OTU_ID
-    OTUIDs = OTUIDs.str.split('|')
-    for i in range(0,len(OTUIDs)):
-        for j in range(0,len(OTUIDs[i])):
-            if(OTUIDs[i][j][:2] == 's_'):
-                df.helper[i] = 1 
-    for k in range(0,len(OTUIDs)):
-        for l in range(0,len(OTUIDs[k])):
-            if(OTUIDs[k][l][:2] == 't_'):
-                df.helper[i] = 2  
-    df_s = df[df['helper'] == 1]
-    del df_s['helper']
-    del df_s['taxonomy']
-    df_s
-    return df_s
-
-
-# In[4]:
-
-
-df1c = cleaning(df1)
-df1c
-
-
-# Cells below are in progress; the following is what I'm trying to do:
-# - Extract only 's__' names from 'OTU_ID'
-# - Replace 'Metaphlan Analysis2' as the sample name ('MSM5LLDA' here) from file name
-# - Be able to append Abundances from multiple files on the right side of existing dataframe
-
-
-# In[ ]:
-
-
-df1 = df.sort_values(by=['MSM5LLDI_Abundance'], ascending=[False])
-df1
-print(df1)
-
-
-
-# In[ ]:
-
-
-d = 'k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Clostridiales_noname|g__Pseudoflavonifractor|s__Pseudoflavonifractor_capillosus'
-x = d.split("|")
-print(x)
-
-
-# In[ ]:
-
-
-for i in range(0,len(df1)):
-    test.append(df1.OTU_ID[i].split('|'))
-    if test[i].str.contains()
-df1s = df1[df1["OTU_ID"].str.contains("s__")]
-df1['splits'] = test
-df1.splits[3]
-df = df1.merge(df2, how='outer')
-print(df)
-df_left = df1.merge(df2, how='inner')
-print(df_left)
-df_join = df1.set_index('OTU_ID').join(df2.set_index('OTU_ID'), lsuffix='_l', rsuffix='_r')
-print(df_join)
-df_join.head(10)
-df_join.index[0]
-for i in range(0,len(df_join)):
-    if df1[0:i].OTU_ID == 's__':
-        df1[['OTU_ID', 'species']] = df1['OTU_ID'].str.split('|s__', 1, expand=True)
-
+# Merging the files & downloading the merged file(s):
+    
+for i in range(0, len(pwyfiles)):
+    GroupApwyfiles = pd.concat(pwyfiles)
+    
+GroupApwyfiles.to_csv('Pathways_GroupA_processed.csv')
