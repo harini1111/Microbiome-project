@@ -1,0 +1,25 @@
+#Loading the master list to create sample-level nodes & rels
+LOAD CSV WITH HEADERS FROM 'file:///Master_List.txt' AS line FIELDTERMINATOR '\t'
+MERGE (sub:Subject {Name: line.Subject_ID})
+MERGE (site:Site {Name: line.Sample_body_site})
+MERGE (vis:Visit {Name:line.Visit_number})
+MERGE (diag:Diagnosis {Name:line.Diagnosis}) 
+MERGE (age:Age {Name:line.Age})
+MERGE (sex:Sex {Name:line.Sex})
+MERGE (race:Race {Name:line.Race})
+MERGE (sub)-[:VISIT]->(vis)
+MERGE (sub)-[:SAMPLED_AT]->(site)
+MERGE (sub)-[:AGED]->(age)
+MERGE (sub)-[:SEX]->(sex)
+MERGE (sub)-[:RACE]->(race)
+MERGE (sub)-[:DIAGNOSIS]->(diag)
+
+#Loading the processed files to create pathway/genus/enz/taxon - genus nodes & rels
+LOAD CSV WITH HEADERS FROM 'file:///ESM5MEBI_pathabundance_relab2_processed.biom.tsv' AS line FIELDTERMINATOR '\t'
+MERGE (sub:Subject {Name: line.Subject_ID})
+MERGE (vis:Visit {Name:line.Visit_number})
+MERGE (pwy:Pathway {Name: line.PWY})
+MERGE (gen:Genus {Name:line.Genus})
+MERGE (sub)-[:VISIT]->(vis)
+MERGE (vis)-[:PATHWAY]->(pwy)
+MERGE (pwy)-[:AS {abs:line.Abundance}]->(gen)
