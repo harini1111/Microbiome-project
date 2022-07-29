@@ -12,7 +12,7 @@
 5. Processed tsv files are in the folder "import_data"
 
 ## Data pre-processing
-1. Run python script "Data_cleaning.ipynb" on Jupyter. (28Jul2022: File in progress)
+1. Run python script "Pathway_preprocessing.ipynb" on Jupyter.
 2. Processed, merged excel files are downloaded per Group per category (pathway/enzyme/gene/taxon).
 
 ## Data loading
