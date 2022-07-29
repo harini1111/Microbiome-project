@@ -1,10 +1,10 @@
-# Importing necessary libraries:
+Step 1/4: Importing necessary libraries:
 import os
 import pandas as pd
 import re
 import numpy as np
 
-# Loading all files from the Group:
+Step 2/4: Loading all files from the Group:
 folder = r'C:/Users/Harini01.R/Desktop/Git/Microbiome-project/import_data/GroupA'
 files = os.listdir(folder)
 pwyfiles = []
@@ -22,7 +22,7 @@ for file in files:
     elif re.search(r"taxon", file):
         taxfiles.append(f"{folder}/{file}")
         
-# Pre-processing the individual files:
+Step 3/4: Pre-processing the individual files:
 visitname = []
 for file in pwyfiles:
     visitname.append(file[70:78])
@@ -56,10 +56,10 @@ for i in range(0, len(pwyfiles)):
     df_1 = pwypreprocess_1(df)
     df_2 = pwypreprocess_2(df_1)
     df_2["Visit_name"] = visitname[i]
-    #print(df_2)
     pwyfiles[i] = df_2
+    print("Completed", i+1, "/", len(pwyfiles), "files.")
 
-# Merging the files & downloading the merged file(s):
+Step 4/4: Merging the files & downloading the merged file(s):
     
 for i in range(0, len(pwyfiles)):
     GroupApwyfiles = pd.concat(pwyfiles)
