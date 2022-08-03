@@ -23,3 +23,11 @@ MERGE (gen:Genus {Name:line.Genus})
 MERGE (sub)-[:VISIT]->(vis)
 MERGE (vis)-[:PATHWAY]->(pwy)
 MERGE (pwy)-[:AS {abs:line.Abundance}]->(gen)
+
+#Loading the processed files to create diagnosis/pathway/genus nodes & rels
+LOAD CSV WITH HEADERS FROM 'file:///UC_Processed.txt' AS line FIELDTERMINATOR '\t'
+MERGE (diag:Diagnosis {Name: line.Diagnosis})
+MERGE (pwy:Pathway {Name: line.PWY})
+MERGE (gen:Genus {Name:line.Genus})
+MERGE (diag)-[:PATHWAY]->(pwy)
+MERGE (pwy)-[:AS {abs:line.Abundance}]->(gen)
