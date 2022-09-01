@@ -3,37 +3,39 @@ LOAD CSV WITH HEADERS FROM 'file:///Master_List.txt' AS line FIELDTERMINATOR '\t
 MERGE (sub:Subject {Name: line.Subject_ID})
 MERGE (site:Site {Name: line.Sample_body_site})
 MERGE (vis:Visit {Name:line.Visit_number})
+MERGE (visid:Visit_ID {Name:line.Visit_ID})
 MERGE (diag:Diagnosis {Name:line.Diagnosis}) 
 MERGE (age:Age {Name:line.Age})
 MERGE (sex:Sex {Name:line.Sex})
 MERGE (race:Race {Name:line.Race})
 MERGE (sub)-[:VISIT]->(vis)
+MERGE (vis)-[:VISIT_ID]->(visid)
 MERGE (sub)-[:SAMPLED_AT]->(site)
 MERGE (sub)-[:AGED]->(age)
 MERGE (sub)-[:SEX]->(sex)
 MERGE (sub)-[:RACE]->(race)
 MERGE (sub)-[:DIAGNOSIS]->(diag)
 
-#Loading the processed files to create pathway/genus/enz/taxon - genus nodes & rels
-LOAD CSV WITH HEADERS FROM 'file:///ESM5MEBI_pathabundance_relab2_processed.biom.tsv' AS line FIELDTERMINATOR '\t'
-MERGE (sub:Subject {Name: line.Subject_ID})
-MERGE (vis:Visit {Name:line.Visit_number})
-MERGE (pwy:Pathway {Name: line.PWY})
+#Loading the enzyme nodes & rels (Please remember to use the same code by renaming the file for each cohort)
+LOAD CSV WITH HEADERS FROM 'file:///CD_enz_processed.txt' AS line FIELDTERMINATOR '\t'
 MERGE (gen:Genus {Name:line.Genus})
-MERGE (sub)-[:VISIT]->(vis)
-MERGE (vis)-[:PATHWAY]->(pwy)
-MERGE (pwy)-[:AS {abs:line.Abundance}]->(gen)
+MERGE (enz:Enzyme {Name:line.Enzyme})
+MERGE (visid:Visit_ID {Name:line.Visit_name})
+MERGE (visid)-[:ENZ_ABS{enzabs:line.Abundance_RPKs}]->(enz)
+MERGE (enz)-[:EXPRESSED_BY]->(gen)
 
-#Loading the processed files to create diagnosis/pathway/genus nodes & rels
-LOAD CSV WITH HEADERS FROM 'file:///UC_Processed.txt' AS line FIELDTERMINATOR '\t'
-MERGE (diag:Diagnosis {Name: line.Diagnosis})
-MERGE (pwy:Pathway {Name: line.PWY})
+#Loading the pathway nodes & rels (Please remember to use the same code by renaming the file for each cohort)
+LOAD CSV WITH HEADERS FROM 'file:///CD_processed.txt' AS line FIELDTERMINATOR '\t'
+MERGE (pwy:Pathway {Name:line.PWY})
 MERGE (gen:Genus {Name:line.Genus})
-MERGE (diag)-[:PATHWAY]->(pwy)
-MERGE (pwy)-[:AS {abs:line.Abundance}]->(gen)
-LOAD CSV WITH HEADERS FROM 'file:///CD_enz_Processed.txt' AS line FIELDTERMINATOR '\t'
-MERGE (diag:Diagnosis {Name: line.Diagnosis})
+MERGE (visid:Visit_ID {Name:line.Visit_name})
+MERGE (visid)-[:PWY_ABS{pwyabs:line.Abundance}]->(pwy)
+MERGE (pwy)-[:EXPRESSED_BY]->(gen)
+
+#Loading the taxonomy nodes & rels (Please remember to use the same code by renaming the file for each cohort)
+LOAD CSV WITH HEADERS FROM 'file:///CD_tax_processed_genus.txt' AS line FIELDTERMINATOR '\t'
 MERGE (gen:Genus {Name:line.Genus})
-MERGE (enz:Enzyme {Name: line.Enzyme})
-MERGE (diag)-[:ENZYME]->(enz)
-MERGE (enz)-[:AS {abs:line.Abundance_RPKs}]->(gen)
+MERGE (visid:Visit_ID {Name:line.Visit_name})
+MERGE (visid)-[:GENUS_ABS{genabs:line.Metaphlan2_Analysis}]->(gen)
+
+
